@@ -35,9 +35,163 @@ STEP-5: Display the obtained cipher text.
 
 
 Program:
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+char matrix[5][5];
+
+void createMatrix(char key[]) {
+    int used[26] = {0};
+    int row = 0, col = 0;
+
+    used['J' - 'A'] = 1;  // I and J are treated as the same
+
+    // Insert key
+    for (int i = 0; key[i] != '\0'; i++) {
+        char ch = toupper(key[i]);
+
+        if (ch < 'A' || ch > 'Z')
+            continue;
+
+        if (ch == 'J')
+            ch = 'I';
+
+        if (!used[ch - 'A']) {
+            matrix[row][col] = ch;
+            used[ch - 'A'] = 1;
+
+            col++;
+
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+
+    // Insert remaining alphabets
+    for (char ch = 'A'; ch <= 'Z'; ch++) {
+        if (!used[ch - 'A']) {
+            matrix[row][col] = ch;
+            used[ch - 'A'] = 1;
+
+            col++;
+
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+}
+
+void findPosition(char ch, int *row, int *col) {
+    if (ch == 'J')
+        ch = 'I';
+
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+int main() {
+    char key[100], plaintext[100], prepared[200];
+    int i, j = 0;
+
+    printf("Enter key: ");
+    scanf("%s", key);
+
+    createMatrix(key);
+
+    printf("\nPlayfair Matrix:\n");
+
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 5; j++) {
+            printf("%c ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    printf("\nEnter plaintext: ");
+    scanf("%s", plaintext);
+
+    // Convert to uppercase
+    for (i = 0; plaintext[i] != '\0'; i++)
+        plaintext[i] = toupper(plaintext[i]);
+
+    // Replace J with I
+    for (i = 0; plaintext[i] != '\0'; i++) {
+        if (plaintext[i] == 'J')
+            plaintext[i] = 'I';
+    }
+
+    // Create pairs
+    int len = strlen(plaintext);
+    i = 0;
+
+    while (i < len) {
+        char a = plaintext[i];
+        char b;
+
+        if (i + 1 >= len) {
+            b = 'X';
+            i++;
+        }
+        else if (a == plaintext[i + 1]) {
+            b = 'X';
+            i++;
+        }
+        else {
+            b = plaintext[i + 1];
+            i += 2;
+        }
+
+        prepared[j++] = a;
+        prepared[j++] = b;
+    }
+
+    prepared[j] = '\0';
+
+    printf("\nCiphertext: ");
+
+    // Encrypt pairs
+    for (i = 0; i < j; i += 2) {
+        int r1, c1, r2, c2;
+
+        findPosition(prepared[i], &r1, &c1);
+        findPosition(prepared[i + 1], &r2, &c2);
+
+        if (r1 == r2) {
+            // Same row
+            printf("%c", matrix[r1][(c1 + 1) % 5]);
+            printf("%c", matrix[r2][(c2 + 1) % 5]);
+        }
+        else if (c1 == c2) {
+            // Same column
+            printf("%c", matrix[(r1 + 1) % 5][c1]);
+            printf("%c", matrix[(r2 + 1) % 5][c2]);
+        }
+        else {
+            // Rectangle rule
+            printf("%c", matrix[r1][c2]);
+            printf("%c", matrix[r2][c1]);
+        }
+    }
+
+    return 0;
+}
 
 
 
 
 
 Output:
+<img width="1916" height="825" alt="Screenshot 2026-10-23 090923" src="https://github.com/user-attachments/assets/b72548c0-9cb7-4a93-b7ab-1835e8bc1a03" />
+
